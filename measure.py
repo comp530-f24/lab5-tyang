@@ -16,14 +16,14 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         total_size (int): Total data to write in bytes.
     """
     # Open file with O_DIRECT for direct I/O to avoid OS-level caching
-    flags = os.O_DIRECT | os.O_RDWR | os.O_CREAT
-    # flags = os.O_RDWR
+    # flags = os.O_DIRECT | os.O_RDWR | os.O_CREAT
+    flags = os.O_RDWR | os.O_CREAT
     buffer = bytearray(io_size)
     
     try:
         fd = os.open(file_path, flags)
+        start_time = time.monotonic()
         with os.fdopen(fd, 'r+b') as f:
-            start_time = time.monotonic()
             
             offset = 0
             while offset < total_size:
@@ -47,21 +47,42 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
                 # Force sync for write operations
                 if is_write:
                     f.flush()
-                    os.fsync(f.fileno())
+                    os.fsync(fd)
             
-            # Calculate elapsed time and throughput
-            elapsed_time = time.monotonic() - start_time
-            throughput = total_size / elapsed_time  # Bytes per second
-            
-            print(f"{'Write' if is_write else 'Read'} Test")
-            print(f"IO Size: {io_size / 1024} KB, Stride: {stride / 1024} KB, Mode: {'Random' if is_random else 'Sequential'}")
-            print(f"Throughput: {throughput / (1024 * 1024):.2f} MB/s")
-            print(f"Time Taken: {elapsed_time:.2f} seconds")
-    
+        # Calculate elapsed time and throughput
+        elapsed_time = time.monotonic() - start_time
+        throughput = total_size / elapsed_time  # Bytes per second
+        
+        print(f"{'Write' if is_write else 'Read'} Test")
+        print(f"IO Size: {io_size / 1024} KB, Stride: {stride / 1024} KB, Mode: {'Random' if is_random else 'Sequential'}")
+        print(f"Throughput: {throughput / (1024 * 1024):.2f} MB/s")
+        print(f"Time Taken: {elapsed_time:.2f} seconds")
+
+        os.remove(file_path)
+        return throughput
+
     except PermissionError:
         print("Error: Permission denied. Run as root if accessing a raw device.")
     except Exception as e:
         print(f"Error: {e}")
+
+def run_experiments():
+    with open("experiments.txt", "r") as f:
+        with open("results.txt", "w") as out:
+            for line in f:
+                if line.startswith("#"):
+                    continue
+                args = line.split()
+                throughput = perform_io_test(
+                    file_path=args[0],
+                    io_size=int(args[1]) * 1024,
+                    stride=int(args[2]) * 1024,
+                    is_random=args[3] == "random",
+                    is_write=args[4] == "write",
+                    total_size=int(args[5]) * 1024
+                )
+                print(f"Throughput: {throughput / (1024 * 1024):.2f} MB/s for {line}")
+                out.write(f"{throughput}\n")
 
 # Parse command-line arguments for flexibility
 if __name__ == "__main__":
@@ -71,8 +92,13 @@ if __name__ == "__main__":
     parser.add_argument("--stride", type=int, default=0, help="Stride between sequential I/Os in KB.")
     parser.add_argument("--random", action="store_true", help="Enable random I/O pattern.")
     parser.add_argument("--write", action="store_true", help="Enable write operations (default is read).")
+    parser.add_argument("--run-experiment", action="store_true", help="Run from experiment file.")
     args = parser.parse_args()
     
+    if args.run_experiment:
+        run_experiments()
+        exit(0)
+
     # Run the benchmark
     perform_io_test(
         file_path=args.file_path,
