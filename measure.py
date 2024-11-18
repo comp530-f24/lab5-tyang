@@ -26,6 +26,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
     
     fd = os.open(file_path, flags)
     start_time = time.monotonic()
+    print("fd", fd)
     with os.fdopen(fd, 'r+b') as f:
         
         offset = 0
