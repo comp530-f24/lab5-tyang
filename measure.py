@@ -35,7 +35,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             # Randomly choose an offset within range
             offset = random.randint(0, (total_size - io_size) // io_size) * io_size
         if not is_random:
-            offset = io_size + stride
+            offset += io_size + stride
 
         
         # Move to the offset
