@@ -51,6 +51,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
                 f.read(io_size)
             
             # If not random, add stride to offset for sequential access
+            if not is_random:
                 offset += io_size + stride
                 offset = (offset // 512) * 512  # Align to 512 bytes
         
@@ -58,6 +59,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             print('writing')
             if is_write:
                 if platform == "linux" or platform == "linux2":
+                    pass
                     os.fsync(fd)
                 else: 
                     f.flush()
