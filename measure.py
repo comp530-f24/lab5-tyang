@@ -55,13 +55,14 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
                 offset = (offset // 512) * 512  # Align to 512 bytes
         
             # Force sync for write operations
+            print('writing')
             if is_write:
                 if platform == "linux" or platform == "linux2":
                     os.fsync(fd)
                 else: 
                     f.flush()
                     os.fsync(fd)
-
+            print(total_iops + " total iops ")
             total_iops += io_size
         
     # Calculate elapsed time and throughput
