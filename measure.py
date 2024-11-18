@@ -16,58 +16,53 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         total_size (int): Total data to write in bytes.
     """
     # Open file with O_DIRECT for direct I/O to avoid OS-level caching
-    # flags = os.O_DIRECT | os.O_RDWR | os.O_CREAT
-    flags = os.O_RDWR | os.O_CREAT
+    flags = os.O_DIRECT | os.O_RDWR | os.O_CREAT
+    # flags = os.O_RDWR | os.O_CREAT
     buffer = bytearray(io_size)
     total_iops = 0
     
-    try:
-        fd = os.open(file_path, flags)
-        start_time = time.monotonic()
-        with os.fdopen(fd, 'r+b') as f:
-            
-            offset = 0
-            while total_iops < desired_iops:
-                if is_random:
-                    # Randomly choose an offset within range
-                    offset = random.randint(0, (total_size - io_size) // io_size) * io_size
-                
-                # Move to the offset
-                f.seek(offset)
-                
-                # Write or read based on is_write flag
-                if is_write:
-                    f.write(buffer)
-                else:
-                    f.read(io_size)
-                
-                # If not random, add stride to offset for sequential access
-                if not is_random:
-                    offset += io_size + stride
-            
-                # Force sync for write operations
-                if is_write:
-                    f.flush()
-                    os.fsync(fd)
-
-                total_iops += io_size
-            
-        # Calculate elapsed time and throughput
-        elapsed_time = time.monotonic() - start_time
-        throughput = desired_iops / elapsed_time  # Bytes per second
+    fd = os.open(file_path, flags)
+    start_time = time.monotonic()
+    with os.fdopen(fd, 'r+b') as f:
         
-        print(f"{'Write' if is_write else 'Read'} Test")
-        print(f"IO Size: {io_size / 1024} KB, Stride: {stride / 1024} KB, Mode: {'Random' if is_random else 'Sequential'}")
-        print(f"Throughput: {throughput / (1024 * 1024):.2f} MB/s")
-        print(f"Time Taken: {elapsed_time:.2f} seconds")
+        offset = 0
+        while total_iops < desired_iops:
+            if is_random:
+                # Randomly choose an offset within range
+                print(offset)
+                offset = random.randint(0, (total_size - io_size) // io_size) * io_size
+            
+            # Move to the offset
+            f.seek(offset)
+            
+            # Write or read based on is_write flag
+            if is_write:
+                f.write(buffer)
+            else:
+                f.read(io_size)
+            
+            # If not random, add stride to offset for sequential access
+            if not is_random:
+                offset += io_size + stride
+        
+            # Force sync for write operations
+            if is_write:
+                f.flush()
+                os.fsync(fd)
 
-        os.remove(file_path)
-        return throughput
+            total_iops += io_size
+        
+    # Calculate elapsed time and throughput
+    elapsed_time = time.monotonic() - start_time
+    throughput = desired_iops / elapsed_time  # Bytes per second
+    
+    print(f"{'Write' if is_write else 'Read'} Test")
+    print(f"IO Size: {io_size / 1024} KB, Stride: {stride / 1024} KB, Mode: {'Random' if is_random else 'Sequential'}")
+    print(f"Throughput: {throughput / (1024 * 1024):.2f} MB/s")
+    print(f"Time Taken: {elapsed_time:.2f} seconds")
 
-    except PermissionError:
-        print("Error: Permission denied. Run as root if accessing a raw device.")
-    except Exception as e:
-        print(f"Error: {e}")
+    os.remove(file_path)
+    return throughput
 
 def run_experiments():
     with open("experiments.txt", "r") as f:
@@ -90,8 +85,8 @@ def run_experiments():
 # Parse command-line arguments for flexibility
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Microbenchmark for I/O performance")
-    parser.add_argument("file_path", type=str, help="Path to the file or device to benchmark.")
-    parser.add_argument("io_size", type=int, help="Size of each I/O operation in KB.")
+    parser.add_argument("--file-path", type=str, help="Path to the file or device to benchmark.")
+    parser.add_argument("--io-size", type=int, help="Size of each I/O operation in KB.")
     parser.add_argument("--stride", type=int, default=0, help="Stride between sequential I/Os in KB.")
     parser.add_argument("--random", action="store_true", help="Enable random I/O pattern.")
     parser.add_argument("--write", action="store_true", help="Enable write operations (default is read).")
