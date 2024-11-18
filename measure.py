@@ -27,47 +27,45 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
     fd = os.open(file_path, flags)
     start_time = time.monotonic()
     print("fd", fd)
-    with os.fdopen(fd, 'r+b') as f:
         
-        offset = 0
-        while total_iops < desired_iops:
-            if is_random:
-                # Randomly choose an offset within range
-                offset = random.randint(0, (total_size - io_size) // io_size) * io_size
-                offset = (offset // 512) * 512  # Align to 512 bytes
-            
-            # Move to the offset
-            print("test")
-            print(offset)
-            # try:
-            #     f.seek(offset)
-            # except OSError as e:
-            #     print(f"Seek error: {e}")
-            #     break
-            
-            # Write or read based on is_write flag
-            if is_write:
-                f.write(buffer)
-            else:
-                f.read(io_size)
-            
-            # If not random, add stride to offset for sequential access
-            if not is_random:
-                offset += io_size + stride
-                offset = (offset // 512) * 512  # Align to 512 bytes
+    offset = 0
+    while total_iops < desired_iops:
+        if is_random:
+            # Randomly choose an offset within range
+            offset = random.randint(0, (total_size - io_size) // io_size) * io_size
+            offset = (offset // 512) * 512  # Align to 512 bytes
         
-            # Force sync for write operations
-            print('writing')
-            if is_write:
-                if platform == "linux" or platform == "linux2":
-                    pass
-                    # os.fsync(fd)
-                else: 
-                    f.flush()
-                    os.fsync(fd)
-            print(total_iops, " total iops ")
-            total_iops += io_size
+        # Move to the offset
+        print("test")
+        print(offset)
+        try:
+            os.lseek(fd, offset, os.SEEK_SET)
+        except OSError as e:
+            print(f"Seek error: {e}")
+            break
         
+        # Write or read based on is_write flag
+        if is_write:
+            os.write(fd, buffer)
+        else:
+            os.read(fd, io_size)
+        
+        # If not random, add stride to offset for sequential access
+        if not is_random:
+            offset += io_size + stride
+            offset = (offset // 512) * 512  # Align to 512 bytes
+    
+        # Force sync for write operations
+        print('writing')
+        if is_write:
+            if platform == "linux" or platform == "linux2":
+                pass
+                os.fsync(fd)
+            else: 
+                os.fsync(fd)
+        print(total_iops, " total iops ")
+        total_iops += io_size
+    
     # Calculate elapsed time and throughput
     elapsed_time = time.monotonic() - start_time
     throughput = desired_iops / elapsed_time  # Bytes per second
