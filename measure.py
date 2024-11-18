@@ -60,7 +60,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             if is_write:
                 if platform == "linux" or platform == "linux2":
                     pass
-                    os.fsync(fd)
+                    # os.fsync(fd)
                 else: 
                     f.flush()
                     os.fsync(fd)
