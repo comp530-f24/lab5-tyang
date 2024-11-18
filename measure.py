@@ -73,11 +73,11 @@ def run_experiments(cli_args):
                 args = line.split()
                 throughput = perform_io_test(
                     file_path=cli_args.file_path,
-                    io_size=int(args[1]) * 1024,
-                    stride=int(args[2]) * 1024,
-                    is_random=args[3] == "random",
-                    is_write=args[4] == "write",
-                    total_size=int(args[5]) * 1024
+                    io_size=int(args[0]) * 1024,
+                    stride=int(args[1]) * 1024,
+                    is_random=args[2] == "random",
+                    is_write=args[3] == "write",
+                    total_size=int(args[4]) * 1024
                 )
                 print(f"Throughput: {throughput / (1024 * 1024):.2f} MB/s for {line}")
                 out.write(f"{throughput / (1024 * 1024):.2f}\n")
