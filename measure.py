@@ -36,7 +36,8 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             offset = random.randint(0, (total_size - io_size) // io_size) * io_size
         if not is_random:
             offset += io_size + stride
-
+        if offset + io_size > 1024 * 1024 * 512:
+            offset = offset % (1024 * 1024 * 512)
         
         # Move to the offset
         os.lseek(fd, offset, os.SEEK_SET)
