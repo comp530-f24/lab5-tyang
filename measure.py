@@ -63,7 +63,10 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
     print(f"Throughput: {throughput / (1024 * 1024):.2f} MB/s")
     print(f"Time Taken: {elapsed_time:.2f} seconds")
 
-    os.remove(file_path)
+    if file_path.startswith("/dev/"):
+        os.close(fd)
+    else:
+        os.remove(file_path)
     return throughput
 
 def run_experiments(cli_args):
