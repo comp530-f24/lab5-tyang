@@ -3,6 +3,7 @@ import time
 import random
 import argparse
 from sys import platform
+import mmap
 
 # Function to perform sequential or random I/O operations with the specified size and stride
 def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True, total_size=1*1024*1024*1024, desired_iops = 1024 * 1024 * 1024):
@@ -21,15 +22,17 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         flags = os.O_DIRECT | os.O_RDWR | os.O_CREAT
     else: 
         flags = os.O_RDWR | os.O_CREAT
-    buffer = bytearray((io_size + 511) // 512 * 512)
+    buffer = bytearray(io_size)
     total_iops = 0
     
     fd = os.open(file_path, flags)
+
     start_time = time.monotonic()
     print("fd", fd)
         
     offset = 0
     while total_iops < desired_iops:
+        
         if is_random:
             # Randomly choose an offset within range
             offset = random.randint(0, (total_size - io_size) // io_size) * io_size
@@ -46,7 +49,9 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         
         # Write or read based on is_write flag
         if is_write:
-            os.write(fd, buffer)
+            m = mmap.mmap(fd, io_size)
+            m.write(buffer)
+            os.write(fd, m)
         else:
             os.read(fd, io_size)
         
