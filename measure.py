@@ -32,11 +32,11 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         while total_iops < desired_iops:
             if is_random:
                 # Randomly choose an offset within range
-                print(offset)
                 offset = random.randint(0, (total_size - io_size) // io_size) * io_size
                 offset = (offset // 512) * 512  # Align to 512 bytes
             
             # Move to the offset
+            print("test")
             f.seek(offset)
             
             # Write or read based on is_write flag
