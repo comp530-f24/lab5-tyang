@@ -38,11 +38,11 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             # Move to the offset
             print("test")
             print(offset)
-            try:
-                f.seek(offset)
-            except OSError as e:
-                print(f"Seek error: {e}")
-                break
+            # try:
+            #     f.seek(offset)
+            # except OSError as e:
+            #     print(f"Seek error: {e}")
+            #     break
             
             # Write or read based on is_write flag
             if is_write:
