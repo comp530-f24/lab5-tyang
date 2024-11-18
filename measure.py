@@ -28,24 +28,16 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
     fd = os.open(file_path, flags)
 
     start_time = time.monotonic()
-    print("fd", fd)
         
     offset = 0
     while total_iops < desired_iops:
-        
         if is_random:
             # Randomly choose an offset within range
             offset = random.randint(0, (total_size - io_size) // io_size) * io_size
             offset = (offset // 512) * 512  # Align to 512 bytes
         
         # Move to the offset
-        print("test")
-        print(offset)
-        try:
-            os.lseek(fd, offset, os.SEEK_SET)
-        except OSError as e:
-            print(f"Seek error: {e}")
-            break
+        os.lseek(fd, offset, os.SEEK_SET)
         
         # Write or read based on is_write flag
         if is_write:
@@ -61,14 +53,9 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             offset = (offset // 512) * 512  # Align to 512 bytes
     
         # Force sync for write operations
-        print('writing')
         if is_write:
-            if platform == "linux" or platform == "linux2":
-                pass
-                os.fsync(fd)
-            else: 
-                os.fsync(fd)
-        print(total_iops, " total iops ")
+            os.fsync(fd)
+
         total_iops += io_size
     
     # Calculate elapsed time and throughput
