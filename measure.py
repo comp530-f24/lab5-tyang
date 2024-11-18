@@ -64,7 +64,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
     os.remove(file_path)
     return throughput
 
-def run_experiments():
+def run_experiments(cli_args):
     with open("experiments.txt", "r") as f:
         with open("results.txt", "w") as out:
             for line in f:
@@ -72,7 +72,7 @@ def run_experiments():
                     continue
                 args = line.split()
                 throughput = perform_io_test(
-                    file_path=args[0],
+                    file_path=cli_args.file_path,
                     io_size=int(args[1]) * 1024,
                     stride=int(args[2]) * 1024,
                     is_random=args[3] == "random",
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.run_experiment:
-        run_experiments()
+        run_experiments(args)
         exit(0)
 
     # Run the benchmark
