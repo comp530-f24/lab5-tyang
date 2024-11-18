@@ -43,7 +43,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         
         # Write or read based on is_write flag
         if is_write:
-            m = mmap.mmap(-1, io_size)
+            m = bytearray(io_size)
             os.write(fd, m)
         else:
             os.read(fd, io_size)
