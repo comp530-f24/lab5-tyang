@@ -22,7 +22,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         flags = os.O_DIRECT | os.O_RDWR | os.O_CREAT
     else: 
         flags = os.O_RDWR | os.O_CREAT
-    buffer = bytearray(io_size)
+        
     total_iops = 0
     
     fd = os.open(file_path, flags)
@@ -34,24 +34,20 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         if is_random:
             # Randomly choose an offset within range
             offset = random.randint(0, (total_size - io_size) // io_size) * io_size
-            offset = (offset // 512) * 512  # Align to 512 bytes
+        if not is_random:
+            offset = io_size + stride
+
         
         # Move to the offset
         os.lseek(fd, offset, os.SEEK_SET)
         
         # Write or read based on is_write flag
         if is_write:
-            m = mmap.mmap(fd, io_size)
-            m.write(buffer)
+            m = mmap.mmap(-1, io_size)
             os.write(fd, m)
         else:
             os.read(fd, io_size)
         
-        # If not random, add stride to offset for sequential access
-        if not is_random:
-            offset += io_size + stride
-            offset = (offset // 512) * 512  # Align to 512 bytes
-    
         # Force sync for write operations
         if is_write:
             os.fsync(fd)
