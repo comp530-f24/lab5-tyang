@@ -21,7 +21,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         flags = os.O_DIRECT | os.O_RDWR | os.O_CREAT
     else: 
         flags = os.O_RDWR | os.O_CREAT
-    buffer = bytearray(io_size)
+    buffer = bytearray((io_size + 511) // 512 * 512)
     total_iops = 0
     
     fd = os.open(file_path, flags)
