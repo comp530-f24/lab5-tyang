@@ -2,6 +2,7 @@ import os
 import time
 import random
 import argparse
+from sys import platform
 
 # Function to perform sequential or random I/O operations with the specified size and stride
 def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True, total_size=1*1024*1024*1024, desired_iops = 1024 * 1024 * 1024):
@@ -16,8 +17,10 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         total_size (int): Total data to write in bytes.
     """
     # Open file with O_DIRECT for direct I/O to avoid OS-level caching
-    flags = os.O_DIRECT | os.O_RDWR | os.O_CREAT
-    # flags = os.O_RDWR | os.O_CREAT
+    if platform == "linux" or platform == "linux2":
+        flags = os.O_DIRECT | os.O_RDWR | os.O_CREAT
+    else: 
+        flags = os.O_RDWR | os.O_CREAT
     buffer = bytearray(io_size)
     total_iops = 0
     
@@ -47,8 +50,11 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         
             # Force sync for write operations
             if is_write:
-                f.flush()
-                os.fsync(fd)
+                if platform == "linux" or platform == "linux2":
+                    os.fsync(fd)
+                else: 
+                    f.flush()
+                    os.fsync(fd)
 
             total_iops += io_size
         
