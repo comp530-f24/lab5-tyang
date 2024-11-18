@@ -1,5 +1,10 @@
 # filename io_size stride random_io? read/write mb_of_write
 # io size
+4 0 seq write 1048576
+32 0 seq write 1048576
+256 0 seq write 1048576
+1024 0 seq write 1048576
+8192 0 seq write 1048576
 32000 0 seq write 1048576
 100000 0 seq write 1048576
 # stride 4
