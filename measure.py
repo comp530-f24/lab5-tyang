@@ -62,7 +62,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
                 else: 
                     f.flush()
                     os.fsync(fd)
-            print(total_iops + " total iops ")
+            print(total_iops, " total iops ")
             total_iops += io_size
         
     # Calculate elapsed time and throughput
