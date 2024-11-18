@@ -34,6 +34,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
                 # Randomly choose an offset within range
                 print(offset)
                 offset = random.randint(0, (total_size - io_size) // io_size) * io_size
+                offset = (offset // 512) * 512  # Align to 512 bytes
             
             # Move to the offset
             f.seek(offset)
@@ -45,8 +46,8 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
                 f.read(io_size)
             
             # If not random, add stride to offset for sequential access
-            if not is_random:
                 offset += io_size + stride
+                offset = (offset // 512) * 512  # Align to 512 bytes
         
             # Force sync for write operations
             if is_write:
