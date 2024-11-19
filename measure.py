@@ -36,6 +36,8 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             offset = random.randint(0, (total_size - io_size) // io_size) * io_size
         if not is_random:
             offset += io_size + stride
+
+        # The SSD is 512mb in size, we must stay below this limit
         if offset + io_size > 1024 * 1024 * 512:
             offset = offset % (1024 * 1024 * 512)
         
@@ -83,7 +85,8 @@ def run_experiments(cli_args):
                     stride=int(args[1]) * 1024,
                     is_random=args[2] == "random",
                     is_write=args[3] == "write",
-                    total_size=int(args[4]) * 1024
+                    total_size=int(args[4]) * 1024,
+                    desired_iops=int(args[5]) * 1024
                 )
                 print(f"Throughput: {throughput / (1024 * 1024):.2f} MB/s for {line}")
                 out.write(f"{throughput / (1024 * 1024):.2f}\n")
