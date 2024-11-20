@@ -73,7 +73,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
     return throughput
 
 def run_experiments(cli_args):
-    with open("experiments.txt", "r") as f:
+    with open("experiments_hdd.txt", "r") as f:
         with open("results.txt", "w") as out:
             for line in f:
                 if line.startswith("#"):
