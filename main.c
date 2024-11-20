@@ -1,68 +1,127 @@
-/* -*- mode:c; c-file-style:"k&r"; c-basic-offset: 4; tab-width:4;
- * indent-tabs-mode:nil; mode:auto-fill; fill-column:78; -*- */
-/* vim: set ts=4 sw=4 et tw=78 fo=cqt wm=0: */
-
-/* Multi-threaded LRU Simulation.
- *
- * Don Porter - porter@cs.unc.edu
- *
- * COMP 530 - University of North Carolina, Chapel Hill
- *
- */
-
-#include <assert.h>
-#include <ctype.h>
-#include <pthread.h>
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/time.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <sys/time.h>
+#include <string.h>
+#include <errno.h>
+#include <stdbool.h>
 
-void help() {
-  printf("LRU Simulator.  Usage: ./lru-[variant] [options]\n\n");
-  printf("Options:\n");
-  printf("\t-c numclients - Use numclients threads.\n");
-  printf("\t-h - Print this help.\n");
-  printf("\t-l length - Run clients for length seconds.\n");
-  printf("\n\n");
+#define BUFFER_SIZE (1024 * 1024) // 1 MB buffer size
+
+// Function to get current time in seconds
+double get_time() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec + (tv.tv_usec / 1000000.0);
 }
 
-int main(int argc, char **argv) {
-  int numthreads = 1; // default to 1
-  int c;
+// Perform I/O operations
+void perform_io_test(const char *file_path, size_t io_size, size_t stride, bool is_random, bool is_write, 
+                     size_t total_size, size_t desired_iops) {
+    int flags = O_RDWR | O_CREAT;
+#ifdef __linux__
+    flags |= O_DIRECT; // Enable direct I/O on Linux
+#endif
 
-  // Read options from command line:
-  //   # clients from command line, as well as seed file
-  //   Simulation length
-  while ((c = getopt(argc, argv, "c:hl:s:")) != -1) {
-    switch (c) {
-    case 'c':
-      numthreads = atoi(optarg);
-      printf("numthreads, %d", numthreads);
-    case 'h':
-      help();
-      return 0;
-    case 'l':
-      break;
-    case 's':
-      break;
-    default:
-      printf("Unknown option\n");
-      help();
-      return 1;
-    }
-  }
-}
-
-int open_disk(char *filename) {
-    int fd = open(filename, O_RDWR);
-    #include <fcntl.h>
-
-    int fd = open(filename, O_RDWR | O_DIRECT);
+    int fd = open(file_path, flags, 0666);
     if (fd < 0) {
-        perror("open");
-        exit(1);
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
     }
-    return fd;  
+
+    void *buffer = aligned_alloc(4096, BUFFER_SIZE);
+    if (!buffer) {
+        perror("Error allocating buffer");
+        close(fd);
+        exit(EXIT_FAILURE);
+    }
+    memset(buffer, 0, BUFFER_SIZE); // Initialize buffer to zero
+
+    size_t total_iops = 0;
+    size_t offset = 0;
+
+    double start_time = get_time();
+
+    while (total_iops < desired_iops) {
+        if (is_random) {
+            // Generate a random offset within the valid range
+            offset = (rand() % ((total_size - io_size) / io_size)) * io_size;
+        } else {
+            offset += io_size + stride;
+
+            // Ensure the offset stays within bounds
+            if (offset + io_size > total_size) {
+                offset = offset % total_size;
+            }
+        }
+
+        // Perform the write or read operation
+        if (lseek(fd, offset, SEEK_SET) < 0) {
+            perror("Error seeking");
+            free(buffer);
+            close(fd);
+            exit(EXIT_FAILURE);
+        }
+
+        if (is_write) {
+            if (write(fd, buffer, io_size) != io_size) {
+                perror("Error writing");
+                free(buffer);
+                close(fd);
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            if (read(fd, buffer, io_size) != io_size) {
+                perror("Error reading");
+                free(buffer);
+                close(fd);
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        // Sync for write operations
+        if (is_write) {
+            fsync(fd);
+        }
+
+        total_iops += io_size;
+    }
+
+    double elapsed_time = get_time() - start_time;
+    double throughput = (double)(desired_iops) / elapsed_time; // Bytes per second
+
+    printf("%s Test\n", is_write ? "Write" : "Read");
+    printf("IO Size: %.2f KB, Stride: %.2f KB, Mode: %s\n", io_size / 1024.0, stride / 1024.0, is_random ? "Random" : "Sequential");
+    printf("Throughput: %.2f MB/s\n", throughput / (1024 * 1024));
+    printf("Time Taken: %.2f seconds\n", elapsed_time);
+
+    free(buffer);
+    close(fd);
+
+    // If the file is not a device, remove it
+    if (strncmp(file_path, "/dev/", 5) != 0) {
+        unlink(file_path);
+    }
+}
+
+// Main function to parse command-line arguments
+int main(int argc, char *argv[]) {
+    if (argc < 6) {
+        fprintf(stderr, "Usage: %s <file_path> <io_size_kb> <stride_kb> <random> <write> <total_size_mb> <desired_iops_mb>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    const char *file_path = argv[1];
+    size_t io_size = atoi(argv[2]) * 1024;       // Convert KB to bytes
+    size_t stride = atoi(argv[3]) * 1024;       // Convert KB to bytes
+    bool is_random = atoi(argv[4]) != 0;
+    bool is_write = atoi(argv[5]) != 0;
+    size_t total_size = atoi(argv[6]) * 1024 * 1024;  // Convert MB to bytes
+    size_t desired_iops = atoi(argv[7]) * 1024 * 1024; // Convert MB to bytes
+
+    perform_io_test(file_path, io_size, stride, is_random, is_write, total_size, desired_iops);
+
+    return EXIT_SUCCESS;
 }
