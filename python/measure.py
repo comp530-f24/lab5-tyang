@@ -73,7 +73,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
     return throughput
 
 def run_experiments(cli_args):
-    with open("experiments_hdd.txt", "r") as f:
+    with open(cli_args.experiment_file, "r") as f:
         with open("results.txt", "w") as out:
             for line in f:
                 if line.startswith("#"):
@@ -100,6 +100,7 @@ if __name__ == "__main__":
     parser.add_argument("--random", action="store_true", help="Enable random I/O pattern.")
     parser.add_argument("--write", action="store_true", help="Enable write operations (default is read).")
     parser.add_argument("--run-experiment", action="store_true", help="Run from experiment file.")
+    parser.add_argument("--experiment-file", type=str, help="Specify experiment file.")
     args = parser.parse_args()
     
     if args.run_experiment:
