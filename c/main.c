@@ -108,7 +108,7 @@ void perform_io_test(const char *file_path, size_t io_size, size_t stride, bool 
 
 // Main function to parse command-line arguments
 int main(int argc, char *argv[]) {
-    if (argc < 6) {
+    if (argc < 7) {
         fprintf(stderr, "Usage: %s <file_path> <io_size_kb> <stride_kb> <random> <write> <total_size_mb> <desired_iops_mb>\n", argv[0]);
         return EXIT_FAILURE;
     }
