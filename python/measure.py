@@ -43,9 +43,9 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
 
         #make offset a multiple of 512
         print(offset)
-        offset = offset - offset % 512
+        offset = offset - offset % 4096
         print(offset)
-        
+
         # Move to the offset
         os.lseek(fd, offset, os.SEEK_SET)
         
@@ -55,7 +55,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             os.write(fd, m)
         else:
             # make read_size a multiple of 512
-            read_size = io_size - io_size % 512
+            read_size = io_size - io_size % 4096
             os.read(fd, read_size)
         
         # Force sync for write operations
