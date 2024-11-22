@@ -40,6 +40,9 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         # The SSD is 512mb in size, we must stay below this limit
         if offset + io_size > 1024 * 1024 * 512:
             offset = offset % (1024 * 1024 * 512)
+
+        #make offset a multiple of 512
+        offset = offset - offset % 512
         
         # Move to the offset
         os.lseek(fd, offset, os.SEEK_SET)
@@ -49,7 +52,9 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             m = mmap.mmap(-1, io_size)
             os.write(fd, m)
         else:
-            os.read(fd, io_size)
+            # make read_size a multiple of 512
+            read_size = io_size - io_size % 512
+            os.read(fd, read_size)
         
         # Force sync for write operations
         if is_write:
