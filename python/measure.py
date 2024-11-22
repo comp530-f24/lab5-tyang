@@ -59,7 +59,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             print(m.read(4096))
             # f = os.fdopen(fd, 'rb', closefd=False)
             f = open(fd, 'rb', closefd=False)
-            f.readinto(m)
+            f.readinto1(m)
             print(m.read(4096))
         
         # Force sync for write operations
