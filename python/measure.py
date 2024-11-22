@@ -56,6 +56,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         else:
             # make read_size a multiple of 512
             m = mmap.mmap(-1, io_size)
+            print(m.read(4096))
             # f = os.fdopen(fd, 'rb', closefd=False)
             f = open(fd, 'rb', closefd=False)
             f.readinto(m)
