@@ -45,6 +45,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         offset = offset - offset % 4096
 
         # Move to the offset
+        print(offset)
         os.lseek(fd, offset, os.SEEK_SET)
         
         # Write or read based on is_write flag
