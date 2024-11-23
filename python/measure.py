@@ -29,7 +29,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
 
     start_time = time.monotonic()
         
-    offset = 0
+    offset = -io_size
     while total_iops < desired_iops:
         if is_random:
             # Randomly choose an offset within range
