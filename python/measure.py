@@ -57,9 +57,9 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             # make read_size a multiple of 512
             m = mmap.mmap(-1, io_size)
             # f = os.fdopen(fd, 'rb', closefd=False)
-            f = os.fdopen(fd, 'rb+')
-            f.readinto(m)
-            print(m.read(4096))
+            f = os.fdopen(fd, 'r', closefd=False)
+            print(f.read(4096))
+            # print(m.read(4096))
         
         # Force sync for write operations
         if is_write:
