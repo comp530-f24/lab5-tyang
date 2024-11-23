@@ -58,8 +58,8 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             m = mmap.mmap(-1, io_size)
             print(m.read(4096))
             # f = os.fdopen(fd, 'rb', closefd=False)
-            f = open(fd, 'rb', closefd=False)
-            f.readinto1(m)
+            f = open(fd, 'rb+', closefd=False)
+            f.readinto(m)
             print(m.read(4096))
         
         # Force sync for write operations
