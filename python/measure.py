@@ -42,9 +42,7 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
             offset = offset % (1024 * 1024 * 512)
 
         #make offset a multiple of 512
-        print(offset)
         offset = offset - offset % 4096
-        print(offset)
 
         # Move to the offset
         os.lseek(fd, offset, os.SEEK_SET)
@@ -56,10 +54,8 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
         else:
             # make read_size a multiple of 512
             m = mmap.mmap(-1, io_size)
-            # f = os.fdopen(fd, 'rb', closefd=False)
             f = os.fdopen(fd, 'rb', closefd=False)
             f.readinto(m)
-            print(m.read(4096))
         
         # Force sync for write operations
         if is_write:
