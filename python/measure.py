@@ -79,23 +79,24 @@ def perform_io_test(file_path, io_size, stride=0, is_random=False, is_write=True
     return throughput
 
 def run_experiments(cli_args):
-    with open(cli_args.experiment_file, "r") as f:
-        with open("results.txt", "w") as out:
-            for line in f:
-                if line.startswith("#"):
-                    continue
-                args = line.split()
-                throughput = perform_io_test(
-                    file_path=cli_args.file_path,
-                    io_size=int(args[0]) * 1024,
-                    stride=int(args[1]) * 1024,
-                    is_random=args[2] == "random",
-                    is_write=args[3] == "write",
-                    total_size=int(args[4]) * 1024,
-                    desired_iops=int(args[5]) * 1024
-                )
-                print(f"Throughput: {throughput / (1024 * 1024):.2f} MB/s for {line}")
-                out.write(f"{throughput / (1024 * 1024):.2f}\n")
+    for i in range(5):
+        with open(cli_args.experiment_file, "r") as f:
+            with open(f"results{i}.txt", "w") as out:
+                for line in f:
+                    if line.startswith("#"):
+                        continue
+                    args = line.split()
+                    throughput = perform_io_test(
+                        file_path=cli_args.file_path,
+                        io_size=int(args[0]) * 1024,
+                        stride=int(args[1]) * 1024,
+                        is_random=args[2] == "random",
+                        is_write=args[3] == "write",
+                        total_size=int(args[4]) * 1024,
+                        desired_iops=int(args[5]) * 1024
+                    )
+                    print(f"Throughput: {throughput / (1024 * 1024):.2f} MB/s for {line}")
+                    out.write(f"{throughput / (1024 * 1024):.2f}\n")
 
 # Parse command-line arguments for flexibility
 if __name__ == "__main__":
