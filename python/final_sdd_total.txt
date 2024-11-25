@@ -56,7 +56,6 @@
 4 0 random write 32768 104857
 4 0 random write 102400 104857
 #
-
 # filename io_size stride random_io? read/read mb_of_read
 # io size
 8 0 seq read 1048576 404857
